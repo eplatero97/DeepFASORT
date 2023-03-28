@@ -4,6 +4,7 @@ Assumes input image directory is in COCO format
 '''
 import argparse
 import cv2
+import json
 import mmcv
 import os
 import numpy as np
@@ -19,9 +20,18 @@ DEFAULTS = {
     "device": "cpu",
     "dilation-kernel": 9,
     "output-dir": "mmpose_preprocessed_out",
+    "json-output": "test_results.json",
     "return_heatmap": False,
     "output_layer_names": None
 }
+KEYPOINTS = ["nose", "left_eye", "right_eye", "left_ear", "right_ear",
+                "left_shoulder", "right_shoulder", "left_elbow", "right_elbow",
+                "left_wrist", "right_wrist", "left_hip", "right_hip",
+                "left_knee", "right_knee", "left_ankle", "right_ankle"]
+SKELETON =  [[15, 13], [13, 11], [16, 14], [14, 12], [11, 12],
+                [5, 11], [6, 12], [5, 6], [5, 7], [6, 8], [7, 9],
+                [8, 10], [1, 2], [0, 1], [0, 2], [1, 3], [2, 4],
+                [3, 5], [4, 6]]
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -36,6 +46,7 @@ def parse_args():
     parser.add_argument('--device', help='Device used for inference', default=DEFAULTS['device'],)
     parser.add_argument('--dilation-kernel', help='Size of kernel used for dilation of skeleton', default=DEFAULTS['dilation-kernel'])
     parser.add_argument("--output-dir", help='Output directory for preprocessed images', default=DEFAULTS['output-dir'])
+    parser.add_argument("--json-output", help='Output annotation json file path', default=DEFAULTS['json-output'])
     return parser.parse_args()
 
 def load_inputs(img_root, json_file):
@@ -81,11 +92,7 @@ def mmpose_inferences(image_names, all_person_results, pose_model):
         results.append(pose_results)
     return results
 
-def preprocess_images(image_names, results, dilation_kernel_size, output_dir):
-    skeleton = [[15, 13], [13, 11], [16, 14], [14, 12], [11, 12],
-                [5, 11], [6, 12], [5, 6], [5, 7], [6, 8], [7, 9],
-                [8, 10], [1, 2], [0, 1], [0, 2], [1, 3], [2, 4],
-                [3, 5], [4, 6]]
+def preprocess_images(image_names, results, dilation_kernel_size, output_dir, img_root):
     print("Masking images...")
     for i in range(len(image_names)):
         img = cv2.imread(image_names[i])
@@ -99,7 +106,7 @@ def preprocess_images(image_names, results, dilation_kernel_size, output_dir):
             keypoints = person['keypoints']
             for keypoint in keypoints:
                 cv2.circle(mask, (int(keypoint[0]), int(keypoint[1])), 4, [255, 255, 255], -1)
-            for link in skeleton:
+            for link in SKELETON:
                 pos1 = (int(keypoints[link[0], 0]), int(keypoints[link[0], 1]))
                 pos2 = (int(keypoints[link[1], 0]), int(keypoints[link[1], 1]))
                 if (pos1[0] <= 0 or pos1[0] >= img_w or pos1[1] <= 0
@@ -119,10 +126,23 @@ def preprocess_images(image_names, results, dilation_kernel_size, output_dir):
         ret, thresh = cv2.threshold(mask_grey, 127, 255, 0)
         preprocessed_image = cv2.bitwise_and(img, img, mask=thresh)
         preprocessed_image = cv2.cvtColor(preprocessed_image, cv2.COLOR_RGB2BGR)
-
-        image_name = os.path.splitext(os.path.basename(image_names[i]))[0]
-        output_filename = os.path.join(output_dir, f"{image_name}_masked.jpg")
+        
+        output_filename = os.path.join(output_dir, os.path.relpath(image_names[i], img_root))
+        os.makedirs(os.path.dirname(output_filename), exist_ok=True)
         cv2.imwrite(output_filename, preprocessed_image)
+
+def write_json(json_input, results, json_output):
+    json_file = open(json_input)
+    coco_dict = json.load(json_file)
+    
+    coco_dict["categories"][0]["keypoints"] = KEYPOINTS
+    coco_dict["categories"][0]["skeleton"] = SKELETON
+
+    for p in range(len(results)):
+        coco_dict["annotations"][p]["keypoints"] = [val.item() for val in list(results[p][0]["keypoints"].flatten())]
+
+    with open(json_output, "w") as f:
+        json.dump(coco_dict, f)
 
 def main():
     args = parse_args()
@@ -132,7 +152,8 @@ def main():
     image_names, all_person_results = load_inputs(args.img_root, args.json_file)
     pose_model = init_pose_model(args.pose_config, args.pose_checkpoint, args.device)
     results = mmpose_inferences(image_names, all_person_results, pose_model)
-    preprocess_images(image_names, results, args.dilation_kernel, args.output_dir)
+    preprocess_images(image_names, results, args.dilation_kernel, args.output_dir, args.img_root)
+    write_json(args.json_file, results, args.json_output)
 
 if __name__ == '__main__':
     main()
