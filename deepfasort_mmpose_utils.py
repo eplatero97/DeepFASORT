@@ -1,4 +1,8 @@
+import torch
+from mmpose_preprocess import preprocess_image
 from mmpose.apis import init_pose_model
+from mmpose.apis.inference import inference_top_down_pose_model
+from mmpose.datasets import DatasetInfo
 
 def load_mmpose_model(cuda_device = "cpu"):
     '''
@@ -10,3 +14,17 @@ def load_mmpose_model(cuda_device = "cpu"):
         device=cuda_device
     )
     return model
+
+def single_image_preprocess(img_tensor:torch.Tensor):
+    model = load_mmpose_model()
+    img_ndarray = img_tensor.numpy(force=True)
+    result, _ = inference_top_down_pose_model(
+        model,
+        img_ndarray,
+        dataset=model.cfg.data['test']['type'],
+        dataset_info=DatasetInfo(model.cfg.data['test'].get('dataset_info', None)),
+        return_heatmap=False,
+        outputs=None
+    )
+    preprocessed_image = preprocess_image(img_ndarray, result)
+    return torch.from_numpy(preprocessed_image)

@@ -92,39 +92,43 @@ def mmpose_inferences(image_names, all_person_results, pose_model):
         results.append(pose_results)
     return results
 
-def preprocess_images(image_names, results, dilation_kernel_size, output_dir, img_root):
+def preprocess_image(img, pose_result, dilation_kernel_size=9):
+    img_h = img.shape[0]
+    img_w = img.shape[1]
+
+    mask = np.zeros(img.shape)
+
+    for person in pose_result:
+        keypoints = person['keypoints']
+        for keypoint in keypoints:
+            cv2.circle(mask, (int(keypoint[0]), int(keypoint[1])), 4, [255, 255, 255], -1)
+        for link in SKELETON:
+            pos1 = (int(keypoints[link[0], 0]), int(keypoints[link[0], 1]))
+            pos2 = (int(keypoints[link[1], 0]), int(keypoints[link[1], 1]))
+            if (pos1[0] <= 0 or pos1[0] >= img_w or pos1[1] <= 0
+                    or pos1[1] >= img_h or pos2[0] <= 0 or pos2[0] >= img_w
+                    or pos2[1] <= 0 or pos2[1] >= img_h):
+                # skip the link that should not be drawn
+                continue
+            cv2.line(mask, pos1, pos2, [255, 255, 255], thickness=1)
+
+    kernel = np.ones((dilation_kernel_size, dilation_kernel_size), np.uint8)
+    mask = cv2.dilate(mask, kernel, iterations=1)
+    mask_grey = cv2.cvtColor(np.uint8(mask), cv2.COLOR_RGB2GRAY)
+    _, thresh = cv2.threshold(mask_grey, 127, 255, 0)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(mask, contours, -1, [255,255,255], -1)
+    mask_grey = cv2.cvtColor(np.uint8(mask), cv2.COLOR_RGB2GRAY)
+    ret, thresh = cv2.threshold(mask_grey, 127, 255, 0)
+    preprocessed_image = cv2.bitwise_and(img, img, mask=thresh)
+    return preprocessed_image
+
+def preprocess_dataset(image_names, results, dilation_kernel_size, output_dir, img_root):
     print("Masking images...")
     for i in range(len(image_names)):
         img = cv2.imread(image_names[i])
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_h = img.shape[0]
-        img_w = img.shape[1]
-
-        mask = np.zeros(img.shape)
-
-        for person in results[i]:
-            keypoints = person['keypoints']
-            for keypoint in keypoints:
-                cv2.circle(mask, (int(keypoint[0]), int(keypoint[1])), 4, [255, 255, 255], -1)
-            for link in SKELETON:
-                pos1 = (int(keypoints[link[0], 0]), int(keypoints[link[0], 1]))
-                pos2 = (int(keypoints[link[1], 0]), int(keypoints[link[1], 1]))
-                if (pos1[0] <= 0 or pos1[0] >= img_w or pos1[1] <= 0
-                        or pos1[1] >= img_h or pos2[0] <= 0 or pos2[0] >= img_w
-                        or pos2[1] <= 0 or pos2[1] >= img_h):
-                    # skip the link that should not be drawn
-                    continue
-                cv2.line(mask, pos1, pos2, [255, 255, 255], thickness=1)
-
-        kernel = np.ones((dilation_kernel_size, dilation_kernel_size), np.uint8)
-        mask = cv2.dilate(mask, kernel, iterations=1)
-        mask_grey = cv2.cvtColor(np.uint8(mask), cv2.COLOR_RGB2GRAY)
-        _, thresh = cv2.threshold(mask_grey, 127, 255, 0)
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(mask, contours, -1, [255,255,255], -1)
-        mask_grey = cv2.cvtColor(np.uint8(mask), cv2.COLOR_RGB2GRAY)
-        ret, thresh = cv2.threshold(mask_grey, 127, 255, 0)
-        preprocessed_image = cv2.bitwise_and(img, img, mask=thresh)
+        preprocessed_image = preprocess_image(img, results[i], dilation_kernel_size)        
         preprocessed_image = cv2.cvtColor(preprocessed_image, cv2.COLOR_RGB2BGR)
         
         output_filename = os.path.join(output_dir, os.path.relpath(image_names[i], img_root))
@@ -152,7 +156,7 @@ def main():
     image_names, all_person_results = load_inputs(args.img_root, args.json_file)
     pose_model = init_pose_model(args.pose_config, args.pose_checkpoint, args.device)
     results = mmpose_inferences(image_names, all_person_results, pose_model)
-    preprocess_images(image_names, results, args.dilation_kernel, args.output_dir, args.img_root)
+    preprocess_dataset(image_names, results, args.dilation_kernel, args.output_dir, args.img_root)
     write_json(args.json_file, results, args.json_output)
 
 if __name__ == '__main__':
