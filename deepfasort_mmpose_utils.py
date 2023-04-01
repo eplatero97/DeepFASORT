@@ -15,8 +15,9 @@ def load_mmpose_model(cuda_device = "cpu"):
     )
     return model
 
-def single_image_preprocess(img_tensor:torch.Tensor):
-    model = load_mmpose_model()
+def single_image_preprocess(img_tensor:torch.Tensor, model=None):
+    if model==None:
+        model = load_mmpose_model()
     img_ndarray = img_tensor.numpy(force=True)
     result, _ = inference_top_down_pose_model(
         model,
