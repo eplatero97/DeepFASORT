@@ -3,29 +3,68 @@ from mmpose_preprocess import preprocess_image
 from mmpose.apis import init_pose_model
 from mmpose.apis.inference import inference_top_down_pose_model
 from mmpose.datasets import DatasetInfo
+from typing import Union
+import numpy as np 
+import imageio
 
-def load_mmpose_model(cuda_device = "cpu"):
-    '''
-    Returns mmpose model that can be passed to inference_top_down_pose_model to infer pose keypoints
-    '''
-    model = init_pose_model(
-        config="configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192.py",
-        checkpoint="https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w48_coco_256x192-b9e0b3ab_20200708.pth",
-        device=cuda_device
-    )
-    return model
+class FeatureAmplification:
+    def __init__(self, device='cpu', mmpose_config=None, mmpose_checkpoint=None):
+        if mmpose_config is None:
+            mmpose_config = "configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192.py"
+        if mmpose_checkpoint is None:
+            mmpose_checkpoint = "https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w48_coco_256x192-b9e0b3ab_20200708.pth"
 
-def single_image_preprocess(img_tensor:torch.Tensor, model=None):
-    if model==None:
-        model = load_mmpose_model()
-    img_ndarray = img_tensor.numpy(force=True)
-    result, _ = inference_top_down_pose_model(
-        model,
-        img_ndarray,
-        dataset=model.cfg.data['test']['type'],
-        dataset_info=DatasetInfo(model.cfg.data['test'].get('dataset_info', None)),
-        return_heatmap=False,
-        outputs=None
-    )
-    preprocessed_image = preprocess_image(img_ndarray, result)
-    return torch.from_numpy(preprocessed_image)
+        self.model = self.load_mmpose_model(device, mmpose_config, mmpose_checkpoint)
+
+
+
+    def load_mmpose_model(self, device, config, checkpoint):
+        '''
+        Returns mmpose model that can be passed to inference_top_down_pose_model to infer pose keypoints
+        '''
+        model = init_pose_model(
+            config=config,
+            checkpoint=checkpoint,
+            device=device
+        )
+        return model
+
+    def single_image_preprocess(self, img:Union[str, np.ndarray]):
+        model = self.model
+        is_tensor = False
+        is_cuda = False
+        if isinstance(img, str):
+            img = imageio.imread(img)
+        if isinstance(img, torch.Tensor):
+            is_tensor = True
+            is_cuda = img.is_cuda
+            img = img.detach().cpu().resolve_conj().resolve_neg().numpy()
+        result, _ = inference_top_down_pose_model(
+            model,
+            img,
+            dataset=model.cfg.data['test']['type'],
+            dataset_info=DatasetInfo(model.cfg.data['test'].get('dataset_info', None)),
+            return_heatmap=False,
+            outputs=None
+        )
+        print(f"result: {result}")
+        preprocessed_image: np.ndarray = preprocess_image(img, result) # shape: (H, W, 3)
+        if is_tensor:
+            preprocessed_image = torch.from_numpy(preprocessed_image).permute(2,1,0).unsqueeze(0)
+            if is_cuda:
+                preprocessed_image = preprocessed_image.cuda()
+        return preprocessed_image
+
+if __name__ == '__main__':
+    from PIL import Image
+    from torchvision.transforms import PILToTensor
+    import matplotlib.pyplot as plt
+    model = load_mmpose_model('cuda')
+    print(model)
+    print(next(model.parameters()).is_cuda)
+    # import image
+    img_path = 'data/MOT17/reid/imgs/MOT17-02-FRCNN_000002/000000.jpg'
+    out = single_image_preprocess(img_path, model, as_torch=True)
+    print(out.shape)
+#    plt.imshow(out)
+#    plt.savefig("./test.png")

@@ -1,4 +1,4 @@
-_base_ = ['./deepsort_faster-rcnn_fpn_4e_mot17-private-half.py']
+_base_ = ['./deepfasort_faster-rcnn_fpn_4e_mot17-private-half.py']
 data_root = 'data/MOT17/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
@@ -25,12 +25,3 @@ data = dict(
     test=dict(
         detection_file=data_root + 'annotations/half-val_detections.pkl',
         pipeline=test_pipeline))
-
-# log cfg settings
-wandb = dict(project="DeepFASORT", entity="eeplater", name="deep_sort")
-log_config = dict(
-    interval=5,
-    hooks=[
-        dict(type='TextLoggerHook'),
-        dict(type='WandbLoggerHook', init_kwargs=wandb)
-    ])

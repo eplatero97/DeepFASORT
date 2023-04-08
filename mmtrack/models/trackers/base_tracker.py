@@ -215,6 +215,8 @@ class BaseTracker(BaseModule, metaclass=ABCMeta):
             if y2 == y1:
                 y2 = y1 + 1
             crop_img = img[:, :, y1:y2, x1:x2]
+            if hasattr(self, 'preprocess_crop_img'):
+                crop_img = self.preprocess_crop_img.single_image_preprocess(crop_img)
             if self.reid.get('img_scale', False):
                 crop_img = F.interpolate(
                     crop_img,

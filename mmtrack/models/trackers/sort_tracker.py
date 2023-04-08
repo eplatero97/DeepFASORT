@@ -9,6 +9,7 @@ from mmtrack.core import imrenormalize
 from mmtrack.core.bbox import bbox_xyxy_to_cxcyah
 from mmtrack.models import TRACKERS
 from .base_tracker import BaseTracker
+from deepfasort_mmpose_utils import FeatureAmplification
 
 
 @TRACKERS.register_module()
@@ -46,12 +47,17 @@ class SortTracker(BaseTracker):
                  match_iou_thr=0.7,
                  num_tentatives=3,
                  init_cfg=None,
+                 preprocess_crop_cfg=None,
+                 preprocess_crop_checkpoint=None,
                  **kwargs):
         super().__init__(init_cfg=init_cfg, **kwargs)
         self.obj_score_thr = obj_score_thr
         self.reid = reid
         self.match_iou_thr = match_iou_thr
         self.num_tentatives = num_tentatives
+        self.preprocess_crop_img = None
+        if (preprocess_crop_cfg is not None) or (preprocess_crop_checkpoint is not None):
+            self.preprocess_crop_img = FeatureAmplification(device='cuda', mmpose_config = self.preprocess_crop_cfg, mmpose_checkpoint = self.preprocess_crop_checkpoint)
 
     @property
     def confirmed_ids(self):

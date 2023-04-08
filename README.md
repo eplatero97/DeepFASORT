@@ -39,166 +39,72 @@ English | [简体中文](README_zh-CN.md)
 
 </div>
 
-## Introduction
+## Introduction :wave:
+This repository evaluates the difference in performance in running DeepFASORT in three ways:
+* without any Feature Amplification
+* with a pre-trained Feature Amplification
+* with a self-learned Feature Amplification 
 
-MMTracking is an open source video perception toolbox by PyTorch. It is a part of [OpenMMLab](https://openmmlab.com) project.
+## Findings :mag:
 
-The master branch works with **PyTorch1.5+**.
+A summary of our findings where we trained DeepSORT component on half of the MOT17 training partition and used the other half as the test partition:
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/24663779/103343312-c724f480-4ac6-11eb-9c22-b56f1902584e.gif" width="800"/>
-</div>
+| Model       	   | Acc         | Prc        | Rcll        | Fscore      | IoU        |
+| ----------- 	   | ----------  | ---------- | ----------- | ----------- | ---------- |
+| DeepSORT         | **97.64%**  | **96.42%** | **97.64%**  | **97.01%**  | **94.23%** |
+| DeepFASORT_pre   | **97.64%**  | 95.75%     | **97.64%**  | 96.64%      | 93.54%     |
+| DeepFASORT_self  | 97.42%      | 95.56%     | 97.42%      | 96.43%      | 93.16%     |
 
-### Major features
+A through review of all our findings is found on `ChestXraySegmentationAblationStudy_lightversion.pdf`.
 
-- **The First Unified Video Perception Platform**
+## Model Visualizations :art:
+Segmentation performance of each model is shown below:
 
-  We are the first open source toolbox that unifies versatile video perception tasks include video object detection, multiple object tracking, single object tracking and video instance segmentation.
+![perf](https://github.com/eplatero97/LungSegmentationPerf/blob/master/assets/model_perf.png)
 
-- **Modular Design**
+The first row represents the X-ray image of five lungs, second row represents the mask, and the rest are the generations of UNet, SegFormer, DeepLabV3+, PSPNet, and FCN respectively. 
 
-  We decompose the video perception framework into different components and one can easily construct a customized method by combining different modules.
-
-- **Simple, Fast and Strong**
-
-  **Simple**: MMTracking interacts with other OpenMMLab projects. It is built upon [MMDetection](https://github.com/open-mmlab/mmdetection) that we can capitalize any detector only through modifying the configs.
-
-  **Fast**: All operations run on GPUs. The training and inference speeds are faster than or comparable to other implementations.
-
-  **Strong**: We reproduce state-of-the-art models and some of them even outperform the official implementations.
-
-## What's New
-
-We release MMTracking 1.0.0rc0, the first version of MMTracking 1.x.
-
-Built upon the new [training engine](https://github.com/open-mmlab/mmengine), MMTracking 1.x unifies the interfaces of datasets, models, evaluation, and visualization.
-
-We also support more methods in MMTracking 1.x, such as [StrongSORT](https://github.com/open-mmlab/mmtracking/tree/dev-1.x/configs/mot/strongsort) for MOT, [Mask2Former](https://github.com/open-mmlab/mmtracking/tree/dev-1.x/configs/vis/mask2former) for VIS, [PrDiMP](https://github.com/open-mmlab/mmtracking/tree/dev-1.x/configs/sot/prdimp) for SOT.
-
-Please refer to [dev-1.x](https://github.com/open-mmlab/mmtracking/tree/dev-1.x) branch for the using of MMTracking 1.x.
-
-## Installation
-
-Please refer to [install.md](docs/en/install.md) for install instructions.
-
-## Getting Started
-
-Please see [dataset.md](docs/en/dataset.md) and [quick_run.md](docs/en/quick_run.md) for the basic usage of MMTracking.
-
-A Colab tutorial is provided. You may preview the notebook [here](./demo/MMTracking_Tutorial.ipynb) or directly run it on [Colab](https://colab.research.google.com/github/open-mmlab/mmtracking/blob/master/demo/MMTracking_Tutorial.ipynb).
-
-There are also usage [tutorials](docs/en/tutorials/), such as [learning about configs](docs/en/tutorials/config.md), [an example about detailed description of vid config](docs/en/tutorials/config_vid.md), [an example about detailed description of mot config](docs/en/tutorials/config_mot.md), [an example about detailed description of sot config](docs/en/tutorials/config_sot.md), [customizing dataset](docs/en/tutorials/customize_dataset.md), [customizing data pipeline](docs/en/tutorials/customize_data_pipeline.md), [customizing vid model](docs/en/tutorials/customize_vid_model.md), [customizing mot model](docs/en/tutorials/customize_mot_model.md), [customizing sot model](docs/en/tutorials/customize_sot_model.md), [customizing runtime settings](docs/en/tutorials/customize_runtime.md) and [useful tools](docs/en/useful_tools_scripts.md).
-
-## Benchmark and model zoo
-
-Results and models are available in the [model zoo](docs/en/model_zoo.md).
-
-### Video Object Detection
-
-Supported Methods
-
-- [x] [DFF](configs/vid/dff) (CVPR 2017)
-- [x] [FGFA](configs/vid/fgfa) (ICCV 2017)
-- [x] [SELSA](configs/vid/selsa) (ICCV 2019)
-- [x] [Temporal RoI Align](configs/vid/temporal_roi_align) (AAAI 2021)
-
-Supported Datasets
-
-- [x] [ILSVRC](http://image-net.org/challenges/LSVRC/2017/)
-
-### Single Object Tracking
-
-Supported Methods
-
-- [x] [SiameseRPN++](configs/sot/siamese_rpn) (CVPR 2019)
-- [x] [STARK](configs/sot/stark) (ICCV 2021)
-- [x] [MixFormer](configs/sot/mixformer) (CVPR 2022)
-- [ ] [PrDiMP](https://arxiv.org/abs/2003.12565) (CVPR2020) (WIP)
-
-Supported Datasets
-
-- [x] [LaSOT](http://vision.cs.stonybrook.edu/~lasot/)
-- [x] [UAV123](https://cemse.kaust.edu.sa/ivul/uav123/)
-- [x] [TrackingNet](https://tracking-net.org/)
-- [x] [OTB100](http://www.visual-tracking.net/)
-- [x] [GOT10k](http://got-10k.aitestunion.com/)
-- [x] [VOT2018](https://www.votchallenge.net/vot2018/)
-
-### Multi-Object Tracking
-
-Supported Methods
-
-- [x] [SORT/DeepSORT](configs/mot/deepsort) (ICIP 2016/2017)
-- [x] [Tracktor](configs/mot/tracktor) (ICCV 2019)
-- [x] [QDTrack](configs/mot/qdtrack) (CVPR 2021)
-- [x] [ByteTrack](configs/mot/bytetrack) (ECCV 2022)
-- [x] [OC-SORT](configs/mot/ocsort) (arXiv 2022)
-
-Supported Datasets
-
-- [x] [MOT Challenge](https://motchallenge.net/)
-- [x] [CrowdHuman](https://www.crowdhuman.org/)
-- [x] [LVIS](https://www.lvisdataset.org/)
-- [x] [TAO](https://taodataset.org/)
-- [x] [DanceTrack](https://arxiv.org/abs/2111.14690)
-
-### Video Instance Segmentation
-
-Supported Methods
-
-- [x] [MaskTrack R-CNN](configs/vis/masktrack_rcnn) (ICCV 2019)
-
-Supported Datasets
-
-- [x] [YouTube-VIS](https://youtube-vos.org/dataset/vis/)
-
-## Contributing
-
-We appreciate all contributions to improve MMTracking. Please refer to [CONTRIBUTING.md](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) for the contributing guideline and [this discussion](https://github.com/open-mmlab/mmtracking/issues/73) for development roadmap.
-
-## Acknowledgement
-
-MMTracking is an open source project that welcome any contribution and feedback.
-We wish that the toolbox and benchmark could serve the growing research
-community by providing a flexible as well as standardized toolkit to reimplement existing methods
-and develop their own new video perception methods.
-
-## Citation
-
-If you find this project useful in your research, please consider cite:
-
-```latex
-@misc{mmtrack2020,
-    title={{MMTracking: OpenMMLab} video perception toolbox and benchmark},
-    author={MMTracking Contributors},
-    howpublished = {\url{https://github.com/open-mmlab/mmtracking}},
-    year={2020}
-}
+## Dataset :file_folder:
+To download the MOT17 dataset, execute below:
+```bash
+wget https://motchallenge.net/data/MOT17.zip -P data/
+unzip data/MOT17.zip data/
+```
+To download the dataset, click [here](https://www.kaggle.com/code/nikhilpandey360/lung-segmentation-from-chest-x-ray-dataset/notebook#Lung-segmentation-from-Chest-X-Ray-dataset). Then, you must pre-process the dataset to format it in a way acceptable to mmsegmentation framework and to partition the dataset into training, validation, and testing set:
+```bash
+python ./data_prep.py --inputpath './archive/Lung Segmentation/' --outputpath ./data/lungsementation
 ```
 
-## License
+## Configs :memo:
+The configs to train each of the models is below:
 
-This project is released under the [Apache 2.0 license](LICENSE).
+* `configs/fcn/fcn_r18b-d8_512x1024_20k_chestxray_binary.py`
+* `configs/pspnet/pspnet_r18b-d8_512x1024_10_chestxray.py`
+* `configs/deeplabv3plus/deeplabv3plus_r18b-d8_512x1024_10_chestxray.py`
+* `configs/segformer/segformer_mit-b0_8x1_1024x1024_10_chestxray.py`
+* `configs/unet/fcn_unet_s5-d16_4x4_512x1024_160k_chestxray.py`
 
-## Projects in OpenMMLab
+> **NOTE**: you will have to configure each of the config files to your own machine since I had some serious memory limitations on my local computer. 
 
-- [MMCV](https://github.com/open-mmlab/mmcv): OpenMMLab foundational library for computer vision.
-- [MIM](https://github.com/open-mmlab/mim): MIM installs OpenMMLab packages.
-- [MMClassification](https://github.com/open-mmlab/mmclassification): OpenMMLab image classification toolbox and benchmark.
-- [MMDetection](https://github.com/open-mmlab/mmdetection): OpenMMLab detection toolbox and benchmark.
-- [MMDetection3D](https://github.com/open-mmlab/mmdetection3d): OpenMMLab's next-generation platform for general 3D object detection.
-- [MMYOLO](https://github.com/open-mmlab/mmyolo): OpenMMLab YOLO series toolbox and benchmark.
-- [MMRotate](https://github.com/open-mmlab/mmrotate): OpenMMLab rotated object detection toolbox and benchmark.
-- [MMSegmentation](https://github.com/open-mmlab/mmsegmentation): OpenMMLab semantic segmentation toolbox and benchmark.
-- [MMOCR](https://github.com/open-mmlab/mmocr): OpenMMLab text detection, recognition and understanding toolbox.
-- [MMPose](https://github.com/open-mmlab/mmpose): OpenMMLab pose estimation toolbox and benchmark.
-- [MMHuman3D](https://github.com/open-mmlab/mmhuman3d): OpenMMLab 3D human parametric model toolbox and benchmark.
-- [MMSelfSup](https://github.com/open-mmlab/mmselfsup): OpenMMLab self-supervised learning Toolbox and Benchmark.
-- [MMRazor](https://github.com/open-mmlab/mmrazor): OpenMMLab Model Compression Toolbox and Benchmark.
-- [MMFewShot](https://github.com/open-mmlab/mmfewshot): OpenMMLab FewShot Learning Toolbox and Benchmark.
-- [MMAction2](https://github.com/open-mmlab/mmaction2): OpenMMLab's next-generation action understanding toolbox and benchmark.
-- [MMTracking](https://github.com/open-mmlab/mmtracking): OpenMMLab video perception toolbox and benchmark.
-- [MMFlow](https://github.com/open-mmlab/mmflow): OpenMMLab optical flow toolbox and benchmark.
-- [MMEditing](https://github.com/open-mmlab/mmediting): OpenMMLab image and video editing toolbox.
-- [MMGeneration](https://github.com/open-mmlab/mmgeneration):  OpenMMLab Generative Model toolbox and benchmark.
-- [MMDeploy](https://github.com/open-mmlab/mmdeploy): OpenMMlab deep learning model deployment toolset.
+## Self-Learning
+To perform self-learning, run below:
+```bash
+CONFIG=/media/erick/9C33-6BBD/Github/mmlab/mmtracking/DeepFASORT/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py
+RESUME_FROM=https://download.openmmlab.com/mmpose/pretrain_models/hrnet_w48-8ef0771d.pth
+python mmpose_tools/train.py $CONFIG --resume-from=$RESUME_FROM --no-validate
+```
+
+## Run Experiments :running:
+To run training and validation, run below:
+```bash
+CONFIG_FILE=configs/unet/fcn_unet_s5-d16_4x4_512x1024_160k_chestxray.py
+bash ./tools/dist_train.sh $CONFIG_FILE 1
+```
+
+To run on testing partition, run below:
+```bash
+CHECKPOINT_FILE=checkpoints/latest.pth 
+CONFIG_FILE=configs/unet/fcn_unet_s5-d16_4x4_512x1024_160k_chestxray.py
+python ./tools/test.py $CONFIG_FILE $CHECKPOINT_FILE --eval mIoU mDice mFscore 
+```
+> **NOTE**: use `test.sh` if you want to use distributed testing.
