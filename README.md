@@ -70,10 +70,29 @@ To download the MOT17 dataset, execute below:
 wget https://motchallenge.net/data/MOT17.zip -P data/
 unzip data/MOT17.zip data/
 ```
-To download the dataset, click [here](https://www.kaggle.com/code/nikhilpandey360/lung-segmentation-from-chest-x-ray-dataset/notebook#Lung-segmentation-from-Chest-X-Ray-dataset). Then, you must pre-process the dataset to format it in a way acceptable to mmsegmentation framework and to partition the dataset into training, validation, and testing set:
+
+Then, to convert MOT17 to coco dataset (needed for mmtracking models) and extract the the ReID cropped images, run below:
 ```bash
-python ./data_prep.py --inputpath './archive/Lung Segmentation/' --outputpath ./data/lungsementation
+MOT2Reid=./tools/convert_datasets/mot/mot2reid.py
+MOT17In=./data/MOT17 # put path where data lives
+MOT17Out=./data/MO17/annotations
+MOT17OutReid=./data/MOT17/reid
+# coco
+python ./tools/convert_datasets/mot/mot2coco.py -i $MOT17In -o $MOT17Out --convert-det --split-train
+# reid
+python $MOT2Reid -i $MOT17In -o $MOT17OutReid --val-split 0.2 --vis-threshold 0.3
 ```
+
+Now, convert the ReID dataset to coco format to feature amplify each of them with mmpose:
+```bash
+python reid_to_coco.py 
+```
+
+Now, preprocess all train images using your mmpose model:
+```bash
+python mmpose_preprocess.py 
+```
+
 
 ## Configs :memo:
 The configs to train each of the models is below:
@@ -90,8 +109,7 @@ The configs to train each of the models is below:
 To perform self-learning, run below:
 ```bash
 CONFIG=/media/erick/9C33-6BBD/Github/mmlab/mmtracking/DeepFASORT/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py
-RESUME_FROM=https://download.openmmlab.com/mmpose/pretrain_models/hrnet_w48-8ef0771d.pth
-python mmpose_tools/train.py $CONFIG --resume-from=$RESUME_FROM --no-validate
+python mmpose_tools/train.py $CONFIG --no-validate
 ```
 
 ## Run Experiments :running:

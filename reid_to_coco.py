@@ -2,23 +2,18 @@ import json
 import cv2
 import os
 import argparse
+from tqdm import tqdm
 
 #Process the input arguments
 parser = argparse.ArgumentParser(description= "Specify the filepath of REID meta files as input and coco json file as output")
 
-parser.add_argument('input_file')
-parser.add_argument('output_file')
-parser.add_argument('--image_root')
+parser.add_argument('--input_file', default='data/MOT17/reid/meta/train_80.txt')
+parser.add_argument('--output_file', default="data/MOT17/reid/coco/train_80.json")
+parser.add_argument('--image_root', default='data/MOT17/reid/imgs/')
 
 args = parser.parse_args()
-if args.input_file == "":
-    print("Specify the input file (.txt)")
-    exit(0)
-if args.output_file == "":
-    print("Specify the output file (.json)")
-    exit(0)
-image_root = args.image_root if args.image_root != "" else os.path.join(os.getcwd(), "reid", "imgs")
 
+image_root = args.image_root
 input_file = args.input_file
 output_file = args.output_file
 
@@ -34,7 +29,7 @@ coco_data = {
 }
 
 # Loop over images in REID dataset
-for i, line in enumerate(reid_data):
+for i, line in tqdm(enumerate(reid_data)):
     image_info = line.split()
     image_filename =os.path.join(image_root, image_info[0]) 
     #print(image_filename)
