@@ -73,24 +73,89 @@ unzip data/MOT17.zip data/
 
 Then, to convert MOT17 to coco dataset (needed for mmtracking models) and extract the the ReID cropped images, run below:
 ```bash
-MOT2Reid=./tools/convert_datasets/mot/mot2reid.py
-MOT17In=./data/MOT17 # put path where data lives
-MOT17Out=./data/MO17/annotations
-MOT17OutReid=./data/MOT17/reid
+MOT17=./data/MOT17 # put path where data lives
+TRAIN_SPLIT=./data/MOT17/train_split
+REID=./data/MOT17/reid
 # coco
-python ./tools/convert_datasets/mot/mot2coco.py -i $MOT17In -o $MOT17Out --convert-det --split-train
+python ./tools/convert_datasets/mot/mot2coco.py -i $MOT17 -o $TRAIN_SPLIT --convert-det --split-train
 # reid
-python $MOT2Reid -i $MOT17In -o $MOT17OutReid --val-split 0.2 --vis-threshold 0.3
+python tools/convert_datasets/mot/mot2reid.py -i $MOT17 -o $REID --val-split 0.2 --vis-threshold 0.3
+```
+
+
+Next, let's filter out the Reid training samples that contain bounding box images from the lower-half validation set:
+```bash
 ```
 
 Now, convert the ReID dataset to coco format to feature amplify each of them with mmpose:
 ```bash
-python reid_to_coco.py 
+REID_TRAIN=data/MOT17/reid/meta/train_80.txt
+REID_TRAIN_COCO=data/MOT17/reid/meta/train_80_coco.json
+REID_IMGS=data/MOT17/reid/imgs/
+python reid_to_coco.py --input-file=$REID_TRAIN --output-file=$REID_TRAIN_COCO --image-root=$REID_IMGS 
 ```
 
 Now, preprocess all train images using your mmpose model:
 ```bash
-python mmpose_preprocess.py 
+DEVICE=cuda
+REID_FAIMGS=./data/MOT17/reid/faimgs
+REID_TRAIN_KP_COCO=./data/MOT17/reid/meta/train_80_kp_coco.json
+python mmpose_preprocess.py --device=$DEVICE --img-root=$REID_IMGS --json-input=$REID_TRAIN_COCO --output-dir=$REID_FAIMGS --json-output=$REID_TRAIN_KP_COCO
+```
+
+Now, filter `$REID_TRAIN_KP_COCO` to only include images above or equal to a certain threshold:
+```bash
+REID_TRAIN_SL_KP_COCO=./data/reid/meta/train_80_self_learning_kp_coco.json
+REID_FAIMGS=./data/reid/faimgs/
+python filter_dataset.py --json-input=$REID_TRAIN_KP_COCO --img-root=$REID_IMGS --threshold=.5 --json-output=$REID_TRAIN_SL_KP_COCO --img-output=$REID_FAIMGS
+```
+
+Now, train the mmpose model:
+```bash
+python mmpose_train.py 
+```
+
+Now, run deep sort with below:
+```bash
+
+```
+
+ 
+You should have the following directory structure:
+```bash
+data/MOT17/
+└─ reid/ # $REID
+	├── faimgs/ # $REID_FAIMGS
+	├	├── MOT17-02-FRCNN_000002/
+	├	├── MOT17-02-FRCNN_000003/
+	├	├── . . .
+	├── imgs/ # $REID_IMGS
+	├	├── MOT17-02-FRCNN_000002/
+	├	├── MOT17-02-FRCNN_000003/
+	├	├── . . .
+	├── meta/ 
+	├	├── train.txt # $REID_TRAIN_TXT
+	├	├── train_80_coco.json # $REID_TRAIN_COCO
+	├	├── train_80_kp_coco.json # $REID_TRAIN_KP_COCO
+	├	├── train_80_self_learning_kp_coco.json # $REID_TRAIN_SL_KP_COCO
+	├	├── train_80.txt
+	├	├── train_20.txt
+└─ test/
+	├── MOT17-01-DPM/
+	├── MOT17-01-FRCNN/
+	├── . . .
+└─ train_split/ # $TRAIN_SPLIT
+	├── half-train_cocoformat.json
+	├── half-train_detections.pkl
+	├── . . .
+└─ train/
+	├── MOT17-02-DPM/
+	├── MOT17-02-FRCNN/
+	├── . . .
+
+
+
+
 ```
 
 

@@ -13,8 +13,8 @@ from mmpose.apis import (inference_top_down_pose_model, init_pose_model)
 from mmpose.datasets import DatasetInfo
 
 DEFAULTS = {
-    "pose_config": "configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192.py",
-    "pose_checkpoint": "https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w48_coco_256x192-b9e0b3ab_20200708.pth",
+    "pose-config": "configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192.py",
+    "pose-checkpoint": "https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w48_coco_256x192-b9e0b3ab_20200708.pth",
     "img-root": "tests/data/coco",
     "json-file": "tests/data/coco/test_coco.json",
     "device": "cpu",
@@ -35,8 +35,8 @@ SKELETON =  [[15, 13], [13, 11], [16, 14], [14, 12], [11, 12],
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pose_config', help='Config file for detection', default=DEFAULTS['pose_config'])
-    parser.add_argument('--pose_checkpoint', help='Checkpoint file', default=DEFAULTS['pose_checkpoint'])
+    parser.add_argument('--pose-config', help='Config file for detection', default=DEFAULTS['pose-config'])
+    parser.add_argument('--pose-checkpoint', help='Checkpoint file', default=DEFAULTS['pose-checkpoint'])
     parser.add_argument('--img-root', type=str, help='Image root', default=DEFAULTS['img-root'])
     parser.add_argument(
         '--json-file',

@@ -13,11 +13,11 @@ import shutil
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--json_input", help="COCO format JSON file (with confidence values) to filter")
-    parser.add_argument("--img_root", help="COCO format directory with preprocessed images")
+    parser.add_argument("--json-input", help="COCO format JSON file (with confidence values) to filter")
+    parser.add_argument("--img-root", help="COCO format directory with preprocessed images")
     parser.add_argument("--threshold", help="Minimum confidence value to filter dataset on", type=float)
-    parser.add_argument("--json_output", help="Path of filtered JSON file output", default="data/MOT17_filtered/annotations/person_keypoints_train.json")
-    parser.add_argument("--img_output", help="Directory to save filtered images in", default=None)
+    parser.add_argument("--json-output", help="Path of filtered JSON file output", default="data/MOT17_filtered/annotations/person_keypoints_train.json")
+    parser.add_argument("--img-output", help="Directory to save filtered images in", default=None)
     return parser.parse_args()
 
 def filter_dataset(json_input, threshold):
