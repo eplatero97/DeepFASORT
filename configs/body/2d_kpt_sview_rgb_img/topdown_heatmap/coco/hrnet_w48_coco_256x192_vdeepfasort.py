@@ -119,27 +119,8 @@ train_pipeline = [
         ]),
 ]
 
-val_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='TopDownGetBboxCenterScale', padding=1.25),
-    dict(type='TopDownAffine'),
-    dict(type='ToTensor'),
-    dict(
-        type='NormalizeTensor',
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]),
-    dict(
-        type='Collect',
-        keys=['img'],
-        meta_keys=[
-            'image_file', 'center', 'scale', 'rotation', 'bbox_score',
-            'flip_pairs'
-        ]),
-]
 
-test_pipeline = val_pipeline
-
-data_root = 'data/coco/FAReID'
+data_root = 'data/MOT17/reid'
 data = dict(
     samples_per_gpu=32,
     workers_per_gpu=2,
@@ -147,23 +128,9 @@ data = dict(
     test_dataloader=dict(samples_per_gpu=32),
     train=dict(
         type='TopDownCocoDataset',
-        ann_file=f'{data_root}/annotations/person_keypoints_train2017.json',
-        img_prefix=f'{data_root}/train2017/',
+        ann_file=f'{data_root}/meta/train_80_self_learning_kp_coco.json',
+        img_prefix=f'{data_root}/imgs/',
         data_cfg=data_cfg,
         pipeline=train_pipeline,
-        dataset_info={{_base_.dataset_info}}),
-    val=dict(
-        type='TopDownCocoDataset',
-        ann_file=f'{data_root}/annotations/person_keypoints_val2017.json',
-        img_prefix=f'{data_root}/val2017/',
-        data_cfg=data_cfg,
-        pipeline=val_pipeline,
-        dataset_info={{_base_.dataset_info}}),
-    test=dict(
-        type='TopDownCocoDataset',
-        ann_file=f'{data_root}/annotations/person_keypoints_val2017.json',
-        img_prefix=f'{data_root}/val2017/',
-        data_cfg=data_cfg,
-        pipeline=test_pipeline,
-        dataset_info={{_base_.dataset_info}}),
+        dataset_info={{_base_.dataset_info}})
 )
