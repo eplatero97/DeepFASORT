@@ -57,71 +57,13 @@ A summary of our findings where we trained DeepSORT component on half of the MOT
 
 A through review of all our findings is found on `ChestXraySegmentationAblationStudy_lightversion.pdf`.
 
-## Model Visualizations :art:
-Segmentation performance of each model is shown below:
-
-![perf](https://github.com/eplatero97/LungSegmentationPerf/blob/master/assets/model_perf.png)
-
-The first row represents the X-ray image of five lungs, second row represents the mask, and the rest are the generations of UNet, SegFormer, DeepLabV3+, PSPNet, and FCN respectively. 
 
 ## Dataset :file_folder:
-To download the MOT17 dataset, execute below:
-```bash
-wget https://motchallenge.net/data/MOT17.zip -P data/
-unzip data/MOT17.zip data/
-```
+To train and validate our results, we use the MOT17 dataset. Since this method is exclusively focused on the embedding aspect of DeepSORT, using MOT17 has the added benefit that it comes with bounding box detections from three different detection model (dpm, frcnn, and sdp).
 
-Then, to convert MOT17 to coco dataset (needed for mmtracking models) and extract the the ReID cropped images, run below:
-```bash
-MOT17=./data/MOT17 # put path where data lives
-TRAIN_SPLIT=./data/MOT17/train_split
-REID=./data/MOT17/reid
-# coco
-python ./tools/convert_datasets/mot/mot2coco.py -i $MOT17 -o $TRAIN_SPLIT --convert-det --split-train
-# reid
-python tools/convert_datasets/mot/mot2reid.py -i $MOT17 -o $REID --val-split 0.2 --vis-threshold 0.3
-```
+To self-train our mmpose model, there are many different conversions and splits that we must due to MOT17.
 
-
-Next, let's filter out the Reid training samples that contain bounding box images from the lower-half validation set:
-```bash
-```
-
-Now, convert the ReID dataset to coco format to feature amplify each of them with mmpose:
-```bash
-REID_TRAIN=data/MOT17/reid/meta/train_80.txt
-REID_TRAIN_COCO=data/MOT17/reid/meta/train_80_coco.json
-REID_IMGS=data/MOT17/reid/imgs/
-python reid_to_coco.py --input-file=$REID_TRAIN --output-file=$REID_TRAIN_COCO --image-root=$REID_IMGS 
-```
-
-Now, preprocess all train images using your mmpose model:
-```bash
-DEVICE=cuda
-REID_FAIMGS=./data/MOT17/reid/faimgs
-REID_TRAIN_KP_COCO=./data/MOT17/reid/meta/train_80_kp_coco.json
-python mmpose_preprocess.py --device=$DEVICE --img-root=$REID_IMGS --json-input=$REID_TRAIN_COCO --output-dir=$REID_FAIMGS --json-output=$REID_TRAIN_KP_COCO
-```
-
-Now, filter `$REID_TRAIN_KP_COCO` to only include images above or equal to a certain threshold:
-```bash
-REID_TRAIN_SL_KP_COCO=./data/reid/meta/train_80_self_learning_kp_coco.json
-REID_FAIMGS=./data/reid/faimgs/
-python filter_dataset.py --json-input=$REID_TRAIN_KP_COCO --img-root=$REID_IMGS --threshold=.5 --json-output=$REID_TRAIN_SL_KP_COCO --img-output=$REID_FAIMGS
-```
-
-Now, train the mmpose model:
-```bash
-python mmpose_train.py 
-```
-
-Now, run deep sort with below:
-```bash
-
-```
-
- 
-You should have the following directory structure:
+To help you keep track of all the conversions/splits, after following this sections, you should have the following directory structure:
 ```bash
 data/MOT17/
 └─ reid/ # $REID
@@ -152,11 +94,111 @@ data/MOT17/
 	├── MOT17-02-DPM/
 	├── MOT17-02-FRCNN/
 	├── . . .
+```  
+
+For the initial configuration, the commented env variables are defined below:
+```bash
+MOT17=./data/MOT17 # put path where data lives
+TRAIN_SPLIT=./data/MOT17/train_split
+REID=./data/MOT17/reid
+REID_TRAIN=data/MOT17/reid/meta/train_80.txt
+REID_TRAIN_COCO=data/MOT17/reid/meta/train_80_coco.json
+REID_IMGS=data/MOT17/reid/imgs/
+REID_FAIMGS=./data/MOT17/reid/faimgs
+REID_TRAIN_KP_COCO=./data/MOT17/reid/meta/train_80_kp_coco.json
+DEVICE=cuda
+THRESHOLD=.5
+```
 
 
+To start, let's download the MOT17 dataset:
+```bash
+wget https://motchallenge.net/data/MOT17.zip -P data/
+unzip data/MOT17.zip -d data/
+```
 
+Then, since the MOT17 test ground-truths are not publically available, we split the training set into upper-half (train) and lower-half (validation):
+```bash
+python ./tools/convert_datasets/mot/mot2coco.py -i $MOT17 -o $TRAIN_SPLIT --convert-det --split-train
+```
+
+Since we want to self-train the mmpose model with only the re-embedded images, we need to extract each bounding box in the MOT17 training set:
+```bash
+python tools/convert_datasets/mot/mot2reid.py -i $MOT17 -o $REID --val-split 0.2 --vis-threshold 0.3
+```
+
+Now, convert the ReID dataset to coco format (format required to run mmpose with existing mmpose features) to feature amplify each of them with mmpose:
+```bash
+python reid_to_coco.py --input-file=$REID_TRAIN --output-file=$REID_TRAIN_COCO --image-root=$REID_IMGS 
+```
+
+Now, preprocess all train images using your mmpose model to extract keypoint predictions and feature amplified cropped images:
+```bash
+python mmpose_preprocess.py --device=$DEVICE --img-root=$REID_IMGS --json-input=$REID_TRAIN_COCO --output-dir=$REID_FAIMGS --json-output=$REID_TRAIN_KP_COCO
+```
+
+Now, filter `$REID_TRAIN_KP_COCO` to only include images above or equal to a certain threshold:
+```bash
+REID_TRAIN_SL_KP_COCO=./data/reid/meta/train_80_self_learning_kp_coco.json
+REID_FAIMGS=./data/reid/faimgs/
+python filter_dataset.py --json-input=$REID_TRAIN_KP_COCO --img-root=$REID_IMGS --threshold=$THRESHOLD --json-output=$REID_TRAIN_SL_KP_COCO --img-output=$REID_FAIMGS
+```
+
+## Training
+In this project, we evaluate the performane of four-models:
+* DeepSORT
+* DeepSORT with coco-pretrained mmpose
+* DeepSORT with coco-pretrained-selflearned mmpose
+* DeepSORT with pretrained-selflearned and fa-reid mmpose
+
+To do this, we need to train the mmpose and the reid network. The files we need to do this are below:
+```bash
+DeepFASORT
+└─ configs/
+	├── body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py
+	├── reid/
+	├	├── resnet50_b32x8_MOT17.py
+	├	├── resnet50_b32x8_faMOT17.py
+└─ work_dirs/ # dir contains weights to be produced
+	├── hrnet_w48_coco_256x192_vdeepfasort.pth # self-learned mmpose weights
+	├── resnet50_b32x8_faMOT17.pth # fa trained reid weights
+	├── resnet50_b32x8_MOT17.pth # trained reid weights
+	
+
+
+	├		├── CARTA_DS2-2022-03-09-embeddings
+```
+
+```bash
+# self-train mmpose model
+CONFIG=./configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py
+python mmpose_train.py --config=$CONFIG --work-dir ./work_dirs/
+
+# train reid model
+REID_CFG=configs/reid/resnet50_b32x8_MOT17.py
+python ./tools/train.py $REID_CFG $GPUS --work-dir ./work_dirs/
+
+# fa-train reid model
+FAREID_CFG=configs/reid/resnet50_b32x8_faMOT17.py
+python ./tools/train.py $FAREID_CFG $GPUS --work-dir ./work_dirs/
+```
+
+## Evaluation
+Now that we have our dataset and weights, we will now evaluate our models on the MOT17 lower-half split of the MOT17 training dataset:
+```bash
+# evaluate DeepSORT
+
+
+# evaluate DeepSORT with pretrained mmpose
+
+# evaluate DeepSORT with pretrained-selflearned-mmpose
+
+# evaluate DeepSORT with pretrained-selflearned-mmpose and fa-trained reid
 
 ```
+
+ 
+You should have the following directory structure:
 
 
 ## Configs :memo:
