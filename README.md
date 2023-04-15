@@ -40,10 +40,13 @@ English | [简体中文](README_zh-CN.md)
 </div>
 
 ## Introduction :wave:
-This repository evaluates the difference in performance in running DeepFASORT in three ways:
-* without any Feature Amplification
-* with a pre-trained Feature Amplification
-* with a self-learned Feature Amplification 
+This repository evaluates the performance of DeepFASORT: DeepSORT where re-identification images are feature amplified before being turned into an embedded vector. The feature amplification is done by introducint a pose model.  
+
+We assess the performance of four-variants of DeepFASORT:
+* DeepSORT
+* DeepSORT with coco-pretrained mmpose
+* DeepSORT with coco-pretrained-selflearned mmpose
+* DeepSORT with pretrained-selflearned and fa-reid mmpose
 
 ## Findings :mag:
 
@@ -57,8 +60,12 @@ A summary of our findings where we trained DeepSORT component on half of the MOT
 
 A through review of all our findings is found on `ChestXraySegmentationAblationStudy_lightversion.pdf`.
 
+## Reprodusability 
+We used the mmtracking and mmpose frameworks to train and evaluate performance. Each framework requires its own data formatting and training the mmpose and reid each requires using a cropped bounding boxes and cropped bounding boxes with feature amplification respectively. 
 
-## Dataset :file_folder:
+Due to this, there is a good amount of pre-processing work that must be done before evaluating performance. 
+
+### Dataset :file_folder:
 To train and validate our results, we use the MOT17 dataset. Since this method is exclusively focused on the embedding aspect of DeepSORT, using MOT17 has the added benefit that it comes with bounding box detections from three different detection model (dpm, frcnn, and sdp).
 
 To self-train our mmpose model, there are many different conversions and splits that we must due to MOT17.
@@ -127,48 +134,44 @@ Since we want to self-train the mmpose model with only the re-embedded images, w
 python tools/convert_datasets/mot/mot2reid.py -i $MOT17 -o $REID --val-split 0.2 --vis-threshold 0.3
 ```
 
-Now, convert the ReID dataset to coco format (format required to run mmpose with existing mmpose features) to feature amplify each of them with mmpose:
+Now, convert the ReID dataset to coco format (format required to run with mmpose):
 ```bash
 python reid_to_coco.py --input-file=$REID_TRAIN --output-file=$REID_TRAIN_COCO --image-root=$REID_IMGS 
 ```
 
-Now, preprocess all train images using your mmpose model to extract keypoint predictions and feature amplified cropped images:
+Now, preprocess all reid train images using your mmpose model to extract keypoint predictions and feature amplified cropped images:
 ```bash
 python mmpose_preprocess.py --device=$DEVICE --img-root=$REID_IMGS --json-input=$REID_TRAIN_COCO --output-dir=$REID_FAIMGS --json-output=$REID_TRAIN_KP_COCO
 ```
 
-Now, filter `$REID_TRAIN_KP_COCO` to only include images above or equal to a certain threshold:
+Now, filter `$REID_TRAIN_KP_COCO` to only include images above or equal to a certain threshold for self-learning mmpose:
 ```bash
 REID_TRAIN_SL_KP_COCO=./data/reid/meta/train_80_self_learning_kp_coco.json
 REID_FAIMGS=./data/reid/faimgs/
 python filter_dataset.py --json-input=$REID_TRAIN_KP_COCO --img-root=$REID_IMGS --threshold=$THRESHOLD --json-output=$REID_TRAIN_SL_KP_COCO --img-output=$REID_FAIMGS
 ```
 
-## Training
-In this project, we evaluate the performane of four-models:
-* DeepSORT
-* DeepSORT with coco-pretrained mmpose
-* DeepSORT with coco-pretrained-selflearned mmpose
-* DeepSORT with pretrained-selflearned and fa-reid mmpose
+### Training
+There are three weights we need to produce:
+* mmpose self-learning on reid images
+* reid trained on reid images
+* reid trained on feature amplified reid images
 
-To do this, we need to train the mmpose and the reid network. The files we need to do this are below:
+To do this, we will use three cfgs and will produce three different weights files (in `*.pth` format). The structure should be like below:
 ```bash
 DeepFASORT
-└─ configs/
-	├── body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py
+└─ configs/mot/deepfasort
+	├── body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py # mmpose self-learning cfg
 	├── reid/
-	├	├── resnet50_b32x8_MOT17.py
-	├	├── resnet50_b32x8_faMOT17.py
+	├	├── resnet50_b32x8_MOT17.py # reid train cfg
+	├	├── resnet50_b32x8_faMOT17.py # fa reid train cfg
 └─ work_dirs/ # dir contains weights to be produced
 	├── hrnet_w48_coco_256x192_vdeepfasort.pth # self-learned mmpose weights
 	├── resnet50_b32x8_faMOT17.pth # fa trained reid weights
 	├── resnet50_b32x8_MOT17.pth # trained reid weights
-	
-
-
-	├		├── CARTA_DS2-2022-03-09-embeddings
 ```
 
+Let's produce the weights:
 ```bash
 # self-train mmpose model
 CONFIG=./configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py
@@ -183,53 +186,38 @@ FAREID_CFG=configs/reid/resnet50_b32x8_faMOT17.py
 python ./tools/train.py $FAREID_CFG $GPUS --work-dir ./work_dirs/
 ```
 
-## Evaluation
+### Evaluation
+
+```bash
+DeepFASORT
+└─ configs/mot/deepfasort/
+	├── deepsort_faster-rcnn_fpn_4e_mot17-public-half.py # deepsort
+	├── deepfasort_mmpose-pretrained_faster-rcnn_fpn_4e_mot17-public-half.py # deepfasort with pretrained mmpose
+	├── deepfasort_mmpose-selftrained_faster-rcnn_fpn_4e_mot17-public-half.py # deepfasort with selflearned mmpose
+	├── deepfasort_mmpose-selftrained_fareid_faster-rcnn_fpn_4e_mot17-public-half.py # deepfasort with selflearned mmpose and fa trained reid
+└─ work_dirs/ # dir contains weights to be produced
+	├── hrnet_w48_coco_256x192_vdeepfasort.pth # self-learned mmpose weights
+	├── resnet50_b32x8_faMOT17.pth # fa trained reid weights
+	├── resnet50_b32x8_MOT17.pth # trained reid weights
+
+```
+
 Now that we have our dataset and weights, we will now evaluate our models on the MOT17 lower-half split of the MOT17 training dataset:
 ```bash
 # evaluate DeepSORT
-
+DS_CFG = configs/mot/deepfasort/deepsort_faster-rcnn_fpn_4e_mot17-public-half.py
+python tools/test.py $DS_CFG --eval track bbox
 
 # evaluate DeepSORT with pretrained mmpose
+DFS_PRETRAINED_CFG = configs/mot/deepfasort/deepfasort_mmpose-pretrained_faster-rcnn_fpn_4e_mot17-public-half.py
+python tools/test.py $DFS_PRETRAINED_CFG --eval track bbox
 
 # evaluate DeepSORT with pretrained-selflearned-mmpose
+DFS_SL_CFG= configs/mot/deepfasort/deepfasort_mmpose-selftrained_faster-rcnn_fpn_4e_mot17-public-half.py
+python tools/test.py $DFS_SL_CFG --eval track bbox
 
 # evaluate DeepSORT with pretrained-selflearned-mmpose and fa-trained reid
-
+DFS_SL_FAREID_CFG= configs/mot/deepfasort/deepfasort_mmpose-selftrained_fareid_faster-rcnn_fpn_4e_mot17-public-half.py
+python tools/test.py $DFS_SL_FAREID_CFG --eval track bbox
 ```
 
- 
-You should have the following directory structure:
-
-
-## Configs :memo:
-The configs to train each of the models is below:
-
-* `configs/fcn/fcn_r18b-d8_512x1024_20k_chestxray_binary.py`
-* `configs/pspnet/pspnet_r18b-d8_512x1024_10_chestxray.py`
-* `configs/deeplabv3plus/deeplabv3plus_r18b-d8_512x1024_10_chestxray.py`
-* `configs/segformer/segformer_mit-b0_8x1_1024x1024_10_chestxray.py`
-* `configs/unet/fcn_unet_s5-d16_4x4_512x1024_160k_chestxray.py`
-
-> **NOTE**: you will have to configure each of the config files to your own machine since I had some serious memory limitations on my local computer. 
-
-## Self-Learning
-To perform self-learning, run below:
-```bash
-CONFIG=/media/erick/9C33-6BBD/Github/mmlab/mmtracking/DeepFASORT/configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py
-python mmpose_tools/train.py $CONFIG --no-validate
-```
-
-## Run Experiments :running:
-To run training and validation, run below:
-```bash
-CONFIG_FILE=configs/unet/fcn_unet_s5-d16_4x4_512x1024_160k_chestxray.py
-bash ./tools/dist_train.sh $CONFIG_FILE 1
-```
-
-To run on testing partition, run below:
-```bash
-CHECKPOINT_FILE=checkpoints/latest.pth 
-CONFIG_FILE=configs/unet/fcn_unet_s5-d16_4x4_512x1024_160k_chestxray.py
-python ./tools/test.py $CONFIG_FILE $CHECKPOINT_FILE --eval mIoU mDice mFscore 
-```
-> **NOTE**: use `test.sh` if you want to use distributed testing.
