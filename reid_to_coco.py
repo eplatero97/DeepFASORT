@@ -7,9 +7,9 @@ from tqdm import tqdm
 #Process the input arguments
 parser = argparse.ArgumentParser(description= "Specify the filepath of REID meta files as input and coco json file as output")
 
-parser.add_argument('--input_file', default='data/MOT17/reid/meta/train_80.txt')
-parser.add_argument('--output_file', default="data/MOT17/reid/coco/train_80.json")
-parser.add_argument('--image_root', default='data/MOT17/reid/imgs/')
+parser.add_argument('--input-file', default='data/MOT17/reid/meta/train_80.txt')
+parser.add_argument('--output-file', default="data/MOT17/reid/coco/train_80.json")
+parser.add_argument('--image-root', default='data/MOT17/reid/imgs/')
 
 args = parser.parse_args()
 
