@@ -141,7 +141,7 @@ python reid_to_coco.py --input-file=$REID_TRAIN --output-file=$REID_TRAIN_COCO -
 
 Now, preprocess all reid train images using your mmpose model to extract keypoint predictions and feature amplified cropped images:
 ```bash
-python mmpose_preprocess.py --device=$DEVICE --img-root=$REID_IMGS --json-input=$REID_TRAIN_COCO --output-dir=$REID_FAIMGS --json-output=$REID_TRAIN_KP_COCO
+python mmpose_preprocess.py --device=$DEVICE --img-root=$REID_IMGS --json-file=$REID_TRAIN_COCO --output-dir=$REID_FAIMGS --json-output=$REID_TRAIN_KP_COCO
 ```
 
 Now, filter `$REID_TRAIN_KP_COCO` to only include images above or equal to a certain threshold for self-learning mmpose:
