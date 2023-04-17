@@ -1,2 +1,6 @@
 cython
 numpy
+xtcocotools
+json_tricks
+munkres
+imageio
