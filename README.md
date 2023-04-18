@@ -113,7 +113,7 @@ REID_TRAIN_COCO=data/MOT17/reid/meta/train_80_coco.json
 REID_IMGS=data/MOT17/reid/imgs/
 REID_FAIMGS=./data/MOT17/reid/faimgs
 REID_TRAIN_KP_COCO=./data/MOT17/reid/meta/train_80_kp_coco.json
-REID_TRAIN_SL_KP_COCO=./data/MOT17/reid/meta/train_80_self_kp_coco.json
+REID_TRAIN_SL_KP_COCO=./data/MOT17/reid/meta/train_80_self_learning_kp_coco.json
 DEVICE=cuda
 THRESHOLD=.5
 ```
