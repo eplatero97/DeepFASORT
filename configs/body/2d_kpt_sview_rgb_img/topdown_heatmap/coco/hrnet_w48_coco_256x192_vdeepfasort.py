@@ -2,6 +2,19 @@ _base_ = [
     '../../../../_base_/default_runtime_mmpose.py',
     '../../../../_base_/datasets/coco.py'
 ]
+
+
+log_config = dict(
+    interval=1,
+    by_epoch=True,
+    max_keep_ckpts=5,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        dict(type='CheckpointHook'),
+        # dict(type='TensorboardLoggerHook')
+        # dict(type='PaviLoggerHook') # for internal services
+    ])
+
 evaluation = dict(interval=10, metric='mAP', save_best='AP')
 
 optimizer = dict(
@@ -120,6 +133,27 @@ train_pipeline = [
 ]
 
 
+val_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='TopDownGetBboxCenterScale', padding=1.25),
+    dict(type='TopDownAffine'),
+    dict(type='ToTensor'),
+    dict(
+        type='NormalizeTensor',
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]),
+    dict(
+        type='Collect',
+        keys=['img'],
+        meta_keys=[
+            'image_file', 'center', 'scale', 'rotation', 'bbox_score',
+            'flip_pairs'
+        ]),
+]
+
+test_pipeline = val_pipeline
+
+
 data_root = 'data/MOT17/reid'
 data = dict(
     samples_per_gpu=32,
@@ -127,6 +161,20 @@ data = dict(
     val_dataloader=dict(samples_per_gpu=32),
     test_dataloader=dict(samples_per_gpu=32),
     train=dict(
+        type='TopDownCocoDataset',
+        ann_file=f'{data_root}/meta/train_80_self_learning_kp_coco.json',
+        img_prefix=f'{data_root}/imgs/',
+        data_cfg=data_cfg,
+        pipeline=train_pipeline,
+        dataset_info={{_base_.dataset_info}}),
+    val=dict(
+        type='TopDownCocoDataset',
+        ann_file=f'{data_root}/meta/train_80_self_learning_kp_coco.json',
+        img_prefix=f'{data_root}/imgs/',
+        data_cfg=data_cfg,
+        pipeline=train_pipeline,
+        dataset_info={{_base_.dataset_info}}),
+    test=dict(
         type='TopDownCocoDataset',
         ann_file=f'{data_root}/meta/train_80_self_learning_kp_coco.json',
         img_prefix=f'{data_root}/imgs/',

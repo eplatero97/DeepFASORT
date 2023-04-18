@@ -113,6 +113,7 @@ REID_TRAIN_COCO=data/MOT17/reid/meta/train_80_coco.json
 REID_IMGS=data/MOT17/reid/imgs/
 REID_FAIMGS=./data/MOT17/reid/faimgs
 REID_TRAIN_KP_COCO=./data/MOT17/reid/meta/train_80_kp_coco.json
+REID_TRAIN_SL_KP_COCO=./data/MOT17/reid/meta/train_80_self_kp_coco.json
 DEVICE=cuda
 THRESHOLD=.5
 ```
@@ -179,7 +180,7 @@ FAREID_CFG=configs/reid/resnet50_b32x8_faMOT17.py
 Let's produce the weights:
 ```bash
 # self-train mmpose model
-python mmpose_train.py --config=$CONFIG --work-dir ./work_dirs/
+python mmpose_train.py --config=$CONFIG --work-dir ./work_dirs/ --no-validate
 
 # train reid model
 python ./tools/train.py $REID_CFG $GPUS --work-dir ./work_dirs/
