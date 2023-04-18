@@ -159,28 +159,32 @@ To do this, we will use three cfgs and will produce three different weights file
 ```bash
 DeepFASORT
 └─ configs/mot/deepfasort
-	├── body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py # mmpose self-learning cfg
+	├── body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py # mmpose self-learning cfg ($CONFIG)
 	├── reid/
-	├	├── resnet50_b32x8_MOT17.py # reid train cfg
-	├	├── resnet50_b32x8_faMOT17.py # fa reid train cfg
+	├	├── resnet50_b32x8_MOT17.py # reid train cfg ($REID_CFG)
+	├	├── resnet50_b32x8_faMOT17.py # fa reid train cfg ($FAREID_CFG)
 └─ work_dirs/ # dir contains weights to be produced
 	├── hrnet_w48_coco_256x192_vdeepfasort.pth # self-learned mmpose weights
 	├── resnet50_b32x8_faMOT17.pth # fa trained reid weights
 	├── resnet50_b32x8_MOT17.pth # trained reid weights
 ```
 
+Env variables are defined below:
+```bash
+CONFIG=./configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py
+REID_CFG=configs/reid/resnet50_b32x8_MOT17.py
+FAREID_CFG=configs/reid/resnet50_b32x8_faMOT17.py
+```
+
 Let's produce the weights:
 ```bash
 # self-train mmpose model
-CONFIG=./configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py
 python mmpose_train.py --config=$CONFIG --work-dir ./work_dirs/
 
 # train reid model
-REID_CFG=configs/reid/resnet50_b32x8_MOT17.py
 python ./tools/train.py $REID_CFG $GPUS --work-dir ./work_dirs/
 
 # fa-train reid model
-FAREID_CFG=configs/reid/resnet50_b32x8_faMOT17.py
 python ./tools/train.py $FAREID_CFG $GPUS --work-dir ./work_dirs/
 ```
 
