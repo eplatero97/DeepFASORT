@@ -146,8 +146,6 @@ python mmpose_preprocess.py --device=$DEVICE --img-root=$REID_IMGS --json-file=$
 
 Now, filter `$REID_TRAIN_KP_COCO` to only include images above or equal to a certain threshold for self-learning mmpose:
 ```bash
-REID_TRAIN_SL_KP_COCO=./data/reid/meta/train_80_self_learning_kp_coco.json
-REID_FAIMGS=./data/reid/faimgs/
 python filter_dataset.py --json-input=$REID_TRAIN_KP_COCO --img-root=$REID_IMGS --threshold=$THRESHOLD --json-output=$REID_TRAIN_SL_KP_COCO 
 ```
 
