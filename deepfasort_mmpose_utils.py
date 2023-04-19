@@ -36,9 +36,10 @@ class FeatureAmplification:
         if isinstance(img, str):
             img = imageio.imread(img)
         if isinstance(img, torch.Tensor):
+            #img.shape # (1, 3, W, H)
             is_tensor = True
             is_cuda = img.is_cuda
-            img = img.detach().cpu().numpy()
+            img = img.detach().cpu().numpy().squeeze().transpose((1,2,0)) # (W, H, 3)
         result, _ = inference_top_down_pose_model(
             model,
             img,
@@ -47,10 +48,10 @@ class FeatureAmplification:
             return_heatmap=False,
             outputs=None
         )
-        print(f"result: {result}")
-        preprocessed_image: np.ndarray = preprocess_image(img, result) # shape: (H, W, 3)
+        #print(f"result: {result}")
+        preprocessed_image: np.ndarray = preprocess_image(img, result) # shape: (W, H, 3)
         if is_tensor:
-            preprocessed_image = torch.from_numpy(preprocessed_image).permute(2,1,0).unsqueeze(0)
+            preprocessed_image = torch.from_numpy(preprocessed_image).permute(2,0,1).unsqueeze(0) # (1, 3, W, H)
             if is_cuda:
                 preprocessed_image = preprocessed_image.cuda()
         return preprocessed_image
