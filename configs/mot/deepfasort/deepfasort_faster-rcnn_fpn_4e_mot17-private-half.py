@@ -38,7 +38,8 @@ model = dict(
         init_cfg=dict(
             type='Pretrained',
             checkpoint=  # noqa: E251
-            './work_dirs/resnet50_b32x8_MOT17.pth'
+            'https://download.openmmlab.com/mmtracking/mot/reid/tracktor_reid_r50_iter25245-a452f51f.pth'  # noqa: E501
+#            './work_dirs/resnet50_b32x8_MOT17.pth'
         )),
     tracker=dict(
         type='SortTracker',
