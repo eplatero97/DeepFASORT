@@ -14,10 +14,6 @@ log_config = dict(
     ])
 
 model = dict(
-    reid=dict(
-        init_cfg=dict(
-            checkpoint='./work_dirs/resnet50_b32x8_MOT17.pth' 
-        )),
     tracker=dict(
         preprocess_crop_cfg=None,
         preprocess_crop_checkpoint=None))
