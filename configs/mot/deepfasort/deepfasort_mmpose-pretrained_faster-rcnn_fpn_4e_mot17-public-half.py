@@ -15,5 +15,5 @@ log_config = dict(
 
 model = dict(
     tracker=dict(
-        preprocess_crop_cfg='configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192.py',
+        preprocess_crop_cfg='configs/body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py',
         preprocess_crop_checkpoint='https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w48_coco_256x192-b9e0b3ab_20200708.pth'))
