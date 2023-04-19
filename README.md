@@ -205,22 +205,27 @@ DeepFASORT
 
 ```
 
+Env variables are below:
+```bash
+DS_CFG=configs/mot/deepfasort/deepsort_faster-rcnn_fpn_4e_mot17-public-half.py
+DFS_PRETRAINED_CFG=configs/mot/deepfasort/deepfasort_mmpose-pretrained_faster-rcnn_fpn_4e_mot17-public-half.py
+DFS_SL_CFG=configs/mot/deepfasort/deepfasort_mmpose-selftrained_faster-rcnn_fpn_4e_mot17-public-half.py
+DFS_SL_FAREID_CFG=configs/mot/deepfasort/deepfasort_mmpose-selftrained_fareid_faster-rcnn_fpn_4e_mot17-public-half.py
+
+```
+
 Now that we have our dataset and weights, we will now evaluate our models on the MOT17 lower-half split of the MOT17 training dataset:
 ```bash
 # evaluate DeepSORT
-DS_CFG = configs/mot/deepfasort/deepsort_faster-rcnn_fpn_4e_mot17-public-half.py
 python tools/test.py $DS_CFG --eval track bbox
 
 # evaluate DeepSORT with pretrained mmpose
-DFS_PRETRAINED_CFG = configs/mot/deepfasort/deepfasort_mmpose-pretrained_faster-rcnn_fpn_4e_mot17-public-half.py
 python tools/test.py $DFS_PRETRAINED_CFG --eval track bbox
 
 # evaluate DeepSORT with pretrained-selflearned-mmpose
-DFS_SL_CFG= configs/mot/deepfasort/deepfasort_mmpose-selftrained_faster-rcnn_fpn_4e_mot17-public-half.py
 python tools/test.py $DFS_SL_CFG --eval track bbox
 
 # evaluate DeepSORT with pretrained-selflearned-mmpose and fa-trained reid
-DFS_SL_FAREID_CFG= configs/mot/deepfasort/deepfasort_mmpose-selftrained_fareid_faster-rcnn_fpn_4e_mot17-public-half.py
 python tools/test.py $DFS_SL_FAREID_CFG --eval track bbox
 ```
 
