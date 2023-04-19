@@ -38,7 +38,7 @@ class FeatureAmplification:
         if isinstance(img, torch.Tensor):
             is_tensor = True
             is_cuda = img.is_cuda
-            img = img.detach().cpu().resolve_conj().resolve_neg().numpy()
+            img = img.detach().cpu().numpy()
         result, _ = inference_top_down_pose_model(
             model,
             img,
