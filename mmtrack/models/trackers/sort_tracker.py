@@ -55,9 +55,8 @@ class SortTracker(BaseTracker):
         self.reid = reid
         self.match_iou_thr = match_iou_thr
         self.num_tentatives = num_tentatives
-        self.preprocess_crop_img = None
         if (preprocess_crop_cfg is not None) or (preprocess_crop_checkpoint is not None):
-            self.preprocess_crop_img = FeatureAmplification(device='cuda', mmpose_config = self.preprocess_crop_cfg, mmpose_checkpoint = self.preprocess_crop_checkpoint)
+            self.preprocess_crop_img = FeatureAmplification(device='cuda', mmpose_config = preprocess_crop_cfg, mmpose_checkpoint = preprocess_crop_checkpoint)
 
     @property
     def confirmed_ids(self):

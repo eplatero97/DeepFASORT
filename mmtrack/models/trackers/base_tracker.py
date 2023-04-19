@@ -30,6 +30,7 @@ class BaseTracker(BaseModule, metaclass=ABCMeta):
         self.momentums = momentums
         self.num_frames_retain = num_frames_retain
         self.fp16_enabled = False
+        self.preprocess_crop_cfg = None
 
         self.reset()
 
@@ -215,7 +216,7 @@ class BaseTracker(BaseModule, metaclass=ABCMeta):
             if y2 == y1:
                 y2 = y1 + 1
             crop_img = img[:, :, y1:y2, x1:x2]
-            if hasattr(self, 'preprocess_crop_img'):
+            if self.preprocess_crop_img is not None:
                 crop_img = self.preprocess_crop_img.single_image_preprocess(crop_img)
             if self.reid.get('img_scale', False):
                 crop_img = F.interpolate(
