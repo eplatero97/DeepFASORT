@@ -4,15 +4,16 @@ _base_ = [
 ]
 
 
+#wandb = dict(project="DeepFASORT", entity="eeplater", name="mmpose self-learning")
 log_config = dict(
     interval=1,
     by_epoch=True,
     max_keep_ckpts=5,
+    out_dir="hrnet_w48_coco_256x192_vdeepfasort_logs",
     hooks=[
         dict(type='TextLoggerHook'),
         dict(type='CheckpointHook'),
-        # dict(type='TensorboardLoggerHook')
-        # dict(type='PaviLoggerHook') # for internal services
+#        dict(type='WandbLoggerHook', init_kwargs=wandb)
     ])
 
 evaluation = dict(interval=10, metric='mAP', save_best='AP')

@@ -2,6 +2,15 @@ TRAIN_REID = True
 _base_ = [
     '../_base_/datasets/mot_challenge_reid.py', '../_base_/default_runtime.py'
 ]
+
+
+log_config = dict(
+    interval=50,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        # dict(type='TensorboardLoggerHook')
+    ])
+
 model = dict(
     reid=dict(
         type='BaseReID',
@@ -23,12 +32,8 @@ model = dict(
             loss_pairwise=dict(
                 type='TripletLoss', margin=0.3, loss_weight=1.0),
             norm_cfg=dict(type='BN1d'),
-            act_cfg=dict(type='ReLU')),
-        init_cfg=dict(
-            type='Pretrained',
-            checkpoint=  # noqa: E251
-            'https://download.openmmlab.com/mmclassification/v0/resnet/resnet50_batch256_imagenet_20200708-cfb998bf.pth'  # noqa: E501
-        )))
+            act_cfg=dict(type='ReLU'))
+        ))
 # optimizer
 optimizer = dict(type='SGD', lr=0.1, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
