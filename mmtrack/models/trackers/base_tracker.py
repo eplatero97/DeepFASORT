@@ -30,7 +30,7 @@ class BaseTracker(BaseModule, metaclass=ABCMeta):
         self.momentums = momentums
         self.num_frames_retain = num_frames_retain
         self.fp16_enabled = False
-        self.preprocess_crop_cfg = None
+        self.preprocess_crop_img = None
 
         self.reset()
 
