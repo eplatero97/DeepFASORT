@@ -255,7 +255,7 @@ DeepFASORT
 
 Env variables are below:
 ```bash
-DS_CFG=configs/mot/deepfasort/deepsort_faster-rcnn_fpn_4e_mot17-public-half.py
+DS_CFG=configs/mot/deepfasort/deepfasort_faster-rcnn_fpn_4e_mot17-public-half.py
 DFS_PRETRAINED_CFG=configs/mot/deepfasort/deepfasort_mmpose-pretrained_faster-rcnn_fpn_4e_mot17-public-half.py
 DFS_SL_CFG=configs/mot/deepfasort/deepfasort_mmpose-selftrained_faster-rcnn_fpn_4e_mot17-public-half.py
 DFS_SL_FAREID_CFG=configs/mot/deepfasort/deepfasort_mmpose-selftrained_fareid_faster-rcnn_fpn_4e_mot17-public-half.py
