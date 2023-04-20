@@ -65,6 +65,54 @@ We used the mmtracking and mmpose frameworks to train and evaluate performance. 
 
 Due to this, there is a good amount of pre-processing work that must be done before evaluating performance. 
 
+After you complete all the steps, your environment should look like below:
+```bash
+DeepFASORT
+└─ configs/
+	├── body/2d_kpt_sview_rgb_img/topdown_heatmap/coco/hrnet_w48_coco_256x192_vdeepfasort.py # mmpose self-learning cfg ($CONFIG)
+	├── mot/deepfasort # mmpose self-learning cfg ($CONFIG)
+	├	├── deepsort_faster-rcnn_fpn_4e_mot17-public-half.py # deepsort
+	├	├── deepfasort_mmpose-pretrained_faster-rcnn_fpn_4e_mot17-public-half.py # deepfasort with pretrained mmpose
+	├	├── deepfasort_mmpose-selftrained_faster-rcnn_fpn_4e_mot17-public-half.py # deepfasort with selflearned mmpose
+	├	├── deepfasort_mmpose-selftrained_fareid_faster-rcnn_fpn_4e_mot17-public-half.py # deepfasort with selflearned mmpose and fa trained reid
+	├── reid/
+	├	├── resnet50_b32x8_MOT17.py # reid train cfg ($REID_CFG)
+	├	├── resnet50_b32x8_faMOT17.py # fa reid train cfg ($FAREID_CFG)
+└─ work_dirs/ # dir contains weights to be produced
+	├── hrnet_w48_coco_256x192_vdeepfasort.pth # self-learned mmpose weights
+	├── resnet50_b32x8_faMOT17.pth # fa trained reid weights
+	├── resnet50_b32x8_MOT17.pth # trained reid weights
+└─ data/MOT17/ 
+	├── reid/
+	├	├── faimgs/
+	├	├	├── MOT17-02-FRCNN_000002/
+	├	├	├── MOT17-02-FRCNN_000003/
+	├	├	├── . . .
+	├	├── imgs/
+	├	├	├── MOT17-02-FRCNN_000002/
+	├	├	├── MOT17-02-FRCNN_000003/
+	├	├	├── . . .
+	├	├── meta/
+	├	├	├── train.txt # $REID_TRAIN_TXT
+	├	├	├── train_80_coco.json # $REID_TRAIN_COCO
+	├	├	├── train_80_kp_coco.json # $REID_TRAIN_KP_COCO
+	├	├	├── train_80_self_learning_kp_coco.json # $REID_TRAIN_SL_KP_COCO
+	├	├	├── train_80.txt
+	├	├	├── train_20.txt
+	├── test/
+	├	├── MOT17-01-DPM/
+	├	├── MOT17-01-FRCNN/
+	├	├── . . .
+	├── train_split/
+	├	├── half-train_cocoformat.json
+	├	├── half-train_detections.pkl
+	├	├── . . .
+	├── train/
+	├	├── MOT17-02-DPM/
+	├	├── MOT17-02-FRCNN/
+	├	├── . . .
+```
+
 ### Dataset :file_folder:
 To train and validate our results, we use the MOT17 dataset. Since this method is exclusively focused on the embedding aspect of DeepSORT, using MOT17 has the added benefit that it comes with bounding box detections from three different detection model (dpm, frcnn, and sdp).
 
