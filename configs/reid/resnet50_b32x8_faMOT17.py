@@ -3,14 +3,6 @@ _base_ = [
     '../_base_/datasets/mot_challenge_reid.py', '../_base_/default_runtime.py'
 ]
 
-
-log_config = dict(
-    interval=50,
-    hooks=[
-        dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
-    ])
-
 model = dict(
     reid=dict(
         type='BaseReID',
