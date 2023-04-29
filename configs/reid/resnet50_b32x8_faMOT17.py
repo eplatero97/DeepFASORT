@@ -45,3 +45,26 @@ lr_config = dict(
     warmup_ratio=1.0 / 1000,
     step=[5])
 total_epochs = 6
+
+
+data_root = 'data/MOT17/'
+data = dict(
+    train=dict(
+        data_prefix=data_root + 'reid/faimgs'),
+    val=dict(
+        data_prefix=data_root + 'reid/faimgs'),
+    test=dict(
+        data_prefix=data_root + 'reid/faimgs'))
+
+
+proj_name = "train_fareid"
+#wandb = dict(project="DeepFASORT", entity="eeplater", name=proj_name)
+log_config = dict(
+    interval=50,
+    by_epoch=False,
+    out_dir=proj_name,
+    hooks=[
+        dict(type='TextLoggerHook', out_dir=proj_name),
+        dict(type='CheckpointHook', interval=1, by_epoch=True, out_dir=proj_name),
+#        dict(type='WandbLoggerHook', init_kwargs=wandb)
+    ])

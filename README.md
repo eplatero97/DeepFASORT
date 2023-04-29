@@ -231,10 +231,10 @@ Let's produce the weights:
 python mmpose_train.py --config=$CONFIG --work-dir ./work_dirs/ --no-validate
 
 # train reid model
-python ./tools/train.py $REID_CFG $GPUS --work-dir ./work_dirs/
+python ./tools/train.py $REID_CFG --work-dir ./work_dirs/
 
 # fa-train reid model
-python ./tools/train.py $FAREID_CFG $GPUS --work-dir ./work_dirs/
+python ./tools/train.py $FAREID_CFG --work-dir ./work_dirs/
 ```
 
 ### Evaluation
