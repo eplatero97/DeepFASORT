@@ -1,5 +1,5 @@
 
-![alt text][https://github.com/eplatero97/DeepFASORT/assets/MOT17-02-FRCNN_000003.gif]
+![alt text][https://github.com/eplatero97/DeepFASORT/blob/master/assets/MOT17-02-FRCNN_000003.gif]
 
 
 ## Introduction :wave:
