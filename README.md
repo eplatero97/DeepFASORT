@@ -1,66 +1,31 @@
-<div align="center">
-  <img src="resources/mmtrack-logo.png" width="600"/>
-  <div>&nbsp;</div>
-  <div align="center">
-    <b><font size="5">OpenMMLab website</font></b>
-    <sup>
-      <a href="https://openmmlab.com">
-        <i><font size="4">HOT</font></i>
-      </a>
-    </sup>
-    &nbsp;&nbsp;&nbsp;&nbsp;
-    <b><font size="5">OpenMMLab platform</font></b>
-    <sup>
-      <a href="https://platform.openmmlab.com">
-        <i><font size="4">TRY IT OUT</font></i>
-      </a>
-    </sup>
-  </div>
-  <div>&nbsp;</div>
 
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mmtrack)](https://pypi.org/project/mmtrack/)
-[![PyPI](https://img.shields.io/pypi/v/mmtrack)](https://pypi.org/project/mmtrack)
-[![docs](https://img.shields.io/badge/docs-latest-blue)](https://mmtracking.readthedocs.io/en/latest/)
-[![badge](https://github.com/open-mmlab/mmtracking/workflows/build/badge.svg)](https://github.com/open-mmlab/mmtracking/actions)
-[![codecov](https://codecov.io/gh/open-mmlab/mmtracking/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmtracking)
-[![license](https://img.shields.io/github/license/open-mmlab/mmtracking.svg)](https://github.com/open-mmlab/mmtracking/blob/master/LICENSE)
+![alt text][https://github.com/eplatero97/DeepFASORT/assets/MOT17-02-FRCNN_000003.gif]
 
-[📘Documentation](https://mmtracking.readthedocs.io/) |
-[🛠️Installation](https://mmtracking.readthedocs.io/en/latest/install.html) |
-[👀Model Zoo](https://mmtracking.readthedocs.io/en/latest/model_zoo.html) |
-[🆕Update News](https://mmtracking.readthedocs.io/en/latest/changelog.html) |
-[🤔Reporting Issues](https://github.com/open-mmlab/mmtracking/issues/new/choose)
-
-</div>
-
-<div align="center">
-
-English | [简体中文](README_zh-CN.md)
-
-</div>
 
 ## Introduction :wave:
-This repository evaluates the performance of DeepFASORT: DeepSORT where re-identification images are feature amplified before being turned into an embedded vector. The feature amplification is done by introducint a pose model.  
+This repository evaluates the performance of DeepFASORT: DeepSORT where re-identification images are feature amplified before being turned into an embedded vector. The feature amplification is done by introducing a pose model.  
 
-We assess the performance of four-variants of DeepFASORT:
-* DeepSORT
-* DeepSORT with coco-pretrained mmpose
-* DeepSORT with coco-pretrained-selflearned mmpose
-* DeepSORT with pretrained-selflearned and fa-reid mmpose
+We analyze the performance of sevent different configurations where we make changes to:
+* Training of Self-Learning (SL) pose
+* Training of FA embedding network
 
 ## Findings :mag:
 
-A summary of our findings where we trained DeepSORT component on half of the MOT17 training partition and used the other half as the test partition:
+A summary of our findings where we pick the top performing pose and SL pose model to compare against DeepSORT is below:
 
-| Model       	   | Acc         | Prc        | Rcll        | Fscore      | IoU        |
-| ----------- 	   | ----------  | ---------- | ----------- | ----------- | ---------- |
-| DeepSORT         | **97.64%**  | **96.42%** | **97.64%**  | **97.01%**  | **94.23%** |
-| DeepFASORT_pre   | **97.64%**  | 95.75%     | **97.64%**  | 96.64%      | 93.54%     |
-| DeepFASORT_self  | 97.42%      | 95.56%     | 97.42%      | 96.43%      | 93.16%     |
 
-A through review of all our findings is found on `ChestXraySegmentationAblationStudy_lightversion.pdf`.
+| Model       	   | MOTA      | HOTA       | IDP        | IDs      |
+| ----------- 	   | ----------| ---------- | -----------| ----------- |
+| DeepSORT         | **48.1%** | **50.2%**  | **92.2%**  | **1199**  |
+| pose210-reid6   | 46.9%      | 45.8%      | 81.0%      | 3140      |
+| SLpose12-reid6  | 45.2%      | 38.7%      | 64.0%      | 5922      |
 
-## Reprodusability 
+A through review of all our findings is found on `Keypoint_Based_DeepFASORT.pdf`.
+
+## Environment :palm_tree:
+The steps I followed to create this environment are shown in `requirements/original_installation_env.sh`.
+
+## Reproducibility :cyclone:
 We used the mmtracking and mmpose frameworks to train and evaluate performance. Each framework requires its own data formatting and training the mmpose and reid each requires using a cropped bounding boxes and cropped bounding boxes with feature amplification respectively. 
 
 Due to this, there is a good amount of pre-processing work that must be done before evaluating performance. 
@@ -198,7 +163,7 @@ Now, filter `$REID_TRAIN_KP_COCO` to only include images above or equal to a cer
 python filter_dataset.py --json-input=$REID_TRAIN_KP_COCO --img-root=$REID_IMGS --threshold=$THRESHOLD --json-output=$REID_TRAIN_SL_KP_COCO 
 ```
 
-### Training
+### Training :muscle:
 There are three weights we need to produce:
 * mmpose self-learning on reid images
 * reid trained on reid images
@@ -216,6 +181,7 @@ DeepFASORT
 	├── hrnet_w48_coco_256x192_vdeepfasort.pth # self-learned mmpose weights
 	├── resnet50_b32x8_faMOT17.pth # fa trained reid weights
 	├── resnet50_b32x8_MOT17.pth # trained reid weights
+	├── train_fareid/work_dirs/ # trained fareid weights
 ```
 
 Env variables are defined below:
@@ -230,14 +196,14 @@ Let's produce the weights:
 # self-train mmpose model
 python mmpose_train.py --config=$CONFIG --work-dir ./work_dirs/ --no-validate
 
-# train reid model
+# train reid model (we skipped this step and just used pre-trained weights)
 python ./tools/train.py $REID_CFG --work-dir ./work_dirs/
 
 # fa-train reid model
 python ./tools/train.py $FAREID_CFG --work-dir ./work_dirs/
 ```
 
-### Evaluation
+### Evaluation :pencil2:
 
 ```bash
 DeepFASORT

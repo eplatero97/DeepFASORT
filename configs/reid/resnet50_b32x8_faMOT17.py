@@ -1,4 +1,5 @@
 TRAIN_REID = True
+device = 'cuda'
 _base_ = [
     '../_base_/datasets/mot_challenge_reid.py', '../_base_/default_runtime.py'
 ]
